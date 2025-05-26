@@ -1,91 +1,40 @@
-name: CI - Dashboard Ambiental
+name: SonarCloud Analysis
 
-# Este workflow se ejecuta cuando haces push o pull request a main
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - sonarQ
+      - 2-corregir-los-errores-de-mantenibilidad
   pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
 
 jobs:
-  fullstack-ci:
+  build:
+    name: SonarCloud
     runs-on: ubuntu-latest
 
-    # Levanta una base de datos PostgreSQL como servicio
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: dashboard_ci
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
-      # Clona el repositorio
-      - name: Clonar repositorio
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      # Configura Node.js
-      - name: Configurar Node.js
-        uses: actions/setup-node@v3
+      - name: Instalar dependencias Backend
+        working-directory: backend
+        run: npm install
+
+      - name: Instalar dependencias Frontend
+        working-directory: frontend
+        run: npm install
+
+      - name: Run SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v5.0.0
         with:
-          node-version: 18
-
-      ######################
-      # BACKEND
-      ######################
-      - name: Instalar dependencias del backend
-        working-directory: ./backend
-        run: npm install
-
-      # Espera a que el contenedor de PostgreSQL esté disponible
-      - name:  Esperar base de datos
-        run: sleep 10
-
-      # Ejecuta el backend con ts-node (modo producción temporal)
-      - name:  Iniciar backend con ts-node
-        working-directory: ./backend
-        run: |
-          nohup npx ts-node src/app.ts &
-
-      # Espera a que el backend esté levantado
-      - name:  Esperar backend
-        run: sleep 5
-
-      # Prueba registro de usuario
-      - name:  Probar registro de usuario
-        run: |
-          curl -X POST http://localhost:3000/api/auth/register \
-          -H "Content-Type: application/json" \
-          -d '{"email": "test@ci.com", "password": "123456", "name": "CI User"}'
-
-      # Prueba login del usuario creado
-      - name:  Probar login
-        run: |
-          curl -X POST http://localhost:3000/api/auth/login \
-          -H "Content-Type: application/json" \
-          -d '{"email": "test@ci.com", "password": "123456"}'
-
-      ######################
-      # FRONTEND
-      ######################
-      - name:  Instalar dependencias del frontend
-        working-directory: ./frontend
-        run: npm install
-
-      # Inicia el frontend (no se accede desde el navegador, solo prueba que no falle)
-      - name:  Iniciar frontend con Vite
-        working-directory: ./frontend
-        run: |
-          nohup npm run dev -- --port 5173 &
-
-      - name:  Verificar que el frontend responde
-        run: |
-          sleep 5
-          curl -I http://localhost:5173
+          args: >
+            -Dsonar.projectKey=DweskZ_Dashboard_Ambiental
+            -Dsonar.organization=dweskz
+            -Dsonar.sources=backend/src,frontend/src
+            -Dsonar.host.url=https://sonarcloud.io
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
