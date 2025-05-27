@@ -15,22 +15,22 @@ export class Weather {
   @Column("float")
   temperature!: number;
 
-  @Column("float")
+  @Column({ type: "float", nullable: true })
   feels_like!: number;
 
-  @Column("float")
+  @Column({ type: "float", nullable: true })
   humidity!: number;
 
-  @Column("float")
+  @Column({ type: "float", nullable: true })
   wind_speed!: number;
 
-  @Column()
+  @Column({ nullable: true })
   icon!: string;
 
-  @Column()
+  @Column({ nullable: true })
   country!: string;
 
-  @Column()
+  @Column({ nullable: true })
   date!: string;
 
   @ManyToOne(() => User, (user) => user.id)

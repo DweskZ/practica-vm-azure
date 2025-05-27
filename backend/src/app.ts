@@ -1,13 +1,12 @@
 import express from "express";
 import cors from "cors";
-import { AppDataSource } from "./data-source";
-import { json } from "body-parser";
+import { AppDataSource } from "./data-source"; 
 import authRoutes from "./routes/authRoutes";
 import weatherRoutes from "./routes/weatherRoutes";
 
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT ?? 3000;
 
 app.use(cors());
 app.use(express.json());

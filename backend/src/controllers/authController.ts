@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { AppDataSource } from "../data-source";
 import { User } from "../models/User";
+// Importa el factory user 
+import { UserFactory } from "../models/factories/UserFactoy"; // añade esto
 
 
 const userRepo = AppDataSource.getRepository(User);
@@ -36,6 +38,7 @@ export const simpleLogin = async (req: Request, res: Response) => {
   }
 };
 
+//Usamos el factory para crear un usuario
 
 export const registerUser = async (req: Request, res: Response) => {
   const { email , password } = req.body;
@@ -53,9 +56,13 @@ export const registerUser = async (req: Request, res: Response) => {
     // 🔐 Encriptar la contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = new User();
-    newUser.email = email;
-    newUser.password = hashedPassword;
+    //const newUser = new User();
+    //newUser.email = email;
+    //newUser.password = hashedPassword;
+    
+    const newUser = UserFactory.create(email, hashedPassword); // ahora usando el factory
+
+
 
     await userRepo.save(newUser);
 
